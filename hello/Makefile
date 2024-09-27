@@ -1,4 +1,4 @@
 
 
 all:
-	clang main.cpp -o hello
+	clang main.cpp -o hello.run
