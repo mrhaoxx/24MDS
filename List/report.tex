@@ -1,0 +1,118 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+% useful packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+
+\lstset{
+    basicstyle=\ttfamily, basewidth=0.5em
+}
+
+% some common command
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+\lhead{郝星星, 3230101639}
+\chead{数据结构与算法第四次作业}
+\rhead{Oct.20th, 2024}
+
+\section{测试程序的设计思路}
+
+本次测试的主要思路是对自定义的 List 类进行全面验证，涵盖了各种基本操作、赋值操作、插入与删除、异常处理等功能。我们希望通过这些测试来确认 List 类在不同使用场景下的行为是否符合预期，包括：
+\begin{itemize}
+\item 默认构造、拷贝构造、移动构造。
+\item 插入、删除元素，包括边界情况的测试。
+\item 赋值操作、异常情况处理及反向迭代。
+\end{itemize}
+
+
+\subsection{初始化与基本操作}
+\begin{itemize}
+\item \textbf{默认构造函数测试}：思路是验证空列表是否正确初始化，输出结果为 true 表示初始化成功且列表为空。
+\item \textbf{push\_back 和 push\_front 测试}：对列表尾部和头部进行插入操作，插入成功后验证列表大小和内容，以确保操作正确性。
+\item \textbf{front 和 back 测试}：思路是获取列表首元素和尾元素，确保插入后的数据与预期一致。
+\item \textbf{pop\_front 和 pop\_back 测试}：对头尾元素执行删除操作，删除后检查列表内容及大小，以验证操作的正确性。
+\end{itemize}
+
+\subsection{赋值与拷贝测试}
+\begin{itemize}
+\item \textbf{拷贝赋值运算符测试}：将一个列表的内容拷贝到另一个列表，思路是确保数据在拷贝后的列表中保持一致性。
+\item \textbf{移动赋值运算符测试}：移动一个列表的内容到另一个列表，思路是确保原列表在移动后为空且新列表的数据正确。
+\end{itemize}
+
+\subsection{插入与删除操作}
+\begin{itemize}
+\item \textbf{指定位置插入测试}：思路是在列表中间插入元素，验证插入后的数据顺序是否正确。
+\item \textbf{插入右值测试}：测试将右值插入到列表中，确保移动语义正常工作，以优化性能。
+\item \textbf{删除范围测试}：使用 erase(iterator, iterator) 删除列表中一段元素，确保删除后数据和列表大小符合预期。
+\end{itemize}
+
+\subsection{清空与异常处理}
+\begin{itemize}
+\item \textbf{clear 函数测试}：清空列表，思路是验证列表变为空，以确保清空操作的有效性。
+\item \textbf{空列表操作测试}：对空列表执行 pop\_front 和 pop\_back 操作，通过捕获异常来确保程序不崩溃，验证代码的健壮性。
+\end{itemize}
+
+
+\subsection{反向迭代器测试}
+\begin{itemize}
+\item \textbf{反向迭代器测试}：思路是对列表从尾到头进行遍历，验证反向迭代器的功能是否正常工作，确保双向链表结构的正确性。
+\end{itemize}
+
+
+\section{测试的结果}
+
+在对空列表执行 pop\_front 和 pop\_back 操作时，原始程序会出发segmentation fault，这是因为在 pop\_front 和 pop\_back 函数中没有对空列表进行判断。为了解决这个问题，我在 pop\_front、pop\_back 和 erase 函数中加入了对空列表的判断，当列表为空时，直接抛出异常。
+
+
+我用 valgrind 进行测试，发现没有发生内存泄露。
+
+\section{bug报告}
+
+我发现了一个 bug，触发条件如下：
+
+\begin{enumerate}
+    \item 创建一个空列表；
+    \item 对空列表执行 pop\_front 操作；
+    \item 程序会出现 segmentation fault。
+\end{enumerate}
+
+据我分析，它出现的原因是：
+
+\begin{enumerate}
+    \item 在 pop\_front 函数中，没有对空列表进行判断，直接执行了删除操作；
+    \item 由于列表为空，删除操作会访问空指针，导致程序崩溃。
+\end{enumerate}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

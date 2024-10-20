@@ -14,6 +14,7 @@
 // };
 int main(){   
     //SingleLinkedList<int> a;    
+
     SingleLinkedList<int> a{1,2,3,4,5};
     int a_get = a.getCurrentVal();    std::cout << a_get << std::endl; //测试【取值】操作是否正确，包括可能的空链表测试(//部分)，每种情况9分
     //SingleLinkedList<char> b;    
