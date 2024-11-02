@@ -1,0 +1,225 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+% useful packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+
+\lstset{
+    basicstyle=\ttfamily, basewidth=0.5em
+}
+
+% some common command
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\title{二叉搜索树（BST）的实现和测试报告}
+\author{郝星星 \& ChatGPT}
+\date{\today}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\begin{document}
+
+\maketitle
+
+\section{引言}
+本报告记录了二叉搜索树（BST）的实现和测试。测试的目标是验证BST在典型的随机操作以及特定边界情况下的正确性。测试分为两类：随机测试和特殊情况测试，确保一般功能和边界条件都得到了充分的检验。
+
+\section{BST实现概述}
+BST的实现支持以下操作：
+\begin{itemize}
+    \item \textbf{插入}：添加新元素，同时保持BST的特性。
+    \item \textbf{删除}：删除元素，处理节点有零个、一个或两个子节点的情况。
+    \item \textbf{遍历}：使用中序遍历打印BST中的元素，以保证元素按排序顺序输出。
+\end{itemize}
+BST实现为模板类，允许存储通用数据类型，并支持中序遍历以验证操作的正确性。
+
+\section{删除函数的修改}
+在最新的实现中，删除函数从递归实现修改为非递归实现，以提高删除操作的效率，特别是在深度较大的树上。新的删除函数的代码如下：
+
+\begin{lstlisting}[language=C++]
+void remove(const Comparable &x, BinaryNode * &t) {
+    // 开始了删除函数的定义，接受待删除的值和指向树根节点的指针引用作为参数。
+    if (t == nullptr) {
+        // 检查树是否为空。如果为空，则直接返回，因为没有可删除的元素。
+        return;
+    }
+
+    // 找到节点，使用非递归方式
+    BinaryNode *node = t;
+    BinaryNode *parent = nullptr;
+    // 初始化指针 'node' 指向当前节点，'parent' 指向其父节点，最初设为 nullptr。
+    while(node != nullptr){
+        if(x < node->element){
+            // 如果待删除的值小于当前节点的值，则移动到左子树并更新父节点指针。
+            parent = node;
+            node = node->left;
+        } else if(x > node->element){
+            // 如果待删除的值大于当前节点的值，则移动到右子树并更新父节点指针。
+            parent = node;
+            node = node->right;
+        } else {
+            // 如果找到了值等于待删除值的节点，则停止查找。
+            break;
+        }
+    }
+
+    if(node == nullptr){
+        // 如果未找到待删除的节点，则返回，表示该值不存在于树中。
+        return;
+    }
+
+    if(node->left != nullptr && node->right != nullptr){
+        // 处理有两个子节点的情况，通过分离右子树中的最小节点来替换当前节点。
+        BinaryNode *minNode = detachMin(node->right);
+        minNode->left = node->left;
+        minNode->right = node->right;
+        if(parent == nullptr){
+            // 如果待删除节点是根节点，则更新根节点指针。
+            t = minNode;
+        } else {
+            if(parent->left == node){
+                // 如果待删除节点是父节点的左子节点，则将父节点的左指针更新为新的子节点。
+                parent->left = minNode;
+            } else {
+                parent->right = minNode;
+            }
+        }
+        delete node;
+    } else {
+        // 处理只有一个子节点的情况，找出非空的子节点。
+        BinaryNode *child = node->left != nullptr ? node->left : node->right;
+        if(parent == nullptr){
+            // 如果待删除节点是根节点，则将根节点更新为其唯一的子节点。
+            t = child;
+        } else {
+            if(parent->left == node){
+                parent->left = child;
+            } else {
+                parent->right = child;
+            }
+        }
+        delete node;
+    }
+}
+\end{lstlisting}
+
+新的实现通过使用循环而不是递归来查找待删除的节点，避免了递归调用可能带来的栈溢出问题。此外，对于节点的删除和重新连接，使用了更加直接的指针操作，从而使得删除过程更加清晰和高效。
+
+在处理具有两个子节点的删除时，新实现通过从右子树中分离出最小节点（\texttt{detachMin} 函数）来替换待删除的节点，从而保持BST的性质。
+
+\section{测试策略}
+测试分为两个阶段：随机测试和特殊情况测试。随机测试旨在模拟典型的使用场景，而特殊情况测试则集中于边界条件和特定的挑战性场景。
+
+\subsection{随机测试}
+随机测试涉及向BST中插入10个随机生成的元素，以中序遍历打印BST，然后删除5个随机元素。在每次插入和删除后，将BST的结构与维护相同元素的\texttt{std::set}进行比较，以确保其正确性。以下是随机测试的结果：
+
+\begin{verbatim}
+Inserting random elements into the BST:
+15 98 70 35 81 89 67 35 43 77
+Initial tree (in-order):
+15 35 43 67 70 77 81 89 98
+Elements in set after insertion:
+15 35 43 67 70 77 81 89 98
+
+Removing some random elements from the BST:
+Trying to remove: 77
+The BST and the set match.
+Trying to remove: 67
+The BST and the set match.
+Trying to remove: 98
+The BST and the set match.
+Trying to remove: 43
+The BST and the set match.
+Trying to remove: 15
+The BST and the set match.
+\end{verbatim}
+
+随机测试确认BST能够正确处理插入和删除操作，并保持其特性，正如BST与\texttt{std::set}的输出匹配所证明的那样。
+
+\subsection{特殊情况测试}
+特殊情况测试旨在验证BST对边界条件的处理：
+\begin{itemize}
+    \item \textbf{从空树中删除}：尝试从空BST中删除节点。输出正确地指示树仍然为空。
+    \item \textbf{单节点树}：插入一个节点（50）并删除它。BST正确地过渡回空状态。
+    \item \textbf{重复插入}：插入重复元素（30）。BST正确地忽略了重复项，并仅保留一个实例。
+    \item \textbf{删除叶子节点}：从包含节点15、30和40的树中删除叶子节点15。BST正确地通过删除叶子节点进行了调整。
+    \item \textbf{删除只有一个子节点的节点}：删除具有一个子节点（10）的节点。BST正确地保留了子节点（5）。
+    \item \textbf{删除有两个子节点的节点}：删除具有两个子节点（25）的节点。BST正确地重组，保持了有效的结构。
+\end{itemize}
+
+\subsubsection{特殊情况测试结果}
+以下是特殊情况测试的摘要：
+
+\begin{verbatim}
+Test 1: Deleting from an empty tree
+Empty tree
+
+Test 2: Insert a single node and delete it
+Tree after inserting 50:
+50
+Tree after deleting 50 (should be empty):
+Empty tree
+
+Test 3: Insert duplicate elements
+Tree after attempting to insert duplicate 30:
+30
+
+Test 4: Remove a leaf node
+Tree before removing leaf node 15:
+15 30 40
+Tree after removing leaf node 15:
+30 40
+
+Test 5: Remove a node with one child
+Tree before removing node 10 (which has one child 5):
+5 10 30 40
+Tree after removing node 10 (should retain child 5):
+5 30 40
+
+Test 6: Remove a node with two children
+Tree before removing node 25 (which has two children 20 and 30):
+5 20 25 30 40
+Tree after removing node 25 (should reorganize correctly):
+5 20 30 40
+\end{verbatim}
+
+\section{结论}
+随机测试和特殊情况测试表明，BST的实现能够在典型和边界情况下正确地管理插入、删除和遍历操作。整个测试过程中，树保持了其结构完整性，并遵循了BST的特性。
+
+最新的删除函数实现通过使用非递归方式，提高了效率并减少了递归调用的栈溢出风险。这使得BST在处理深度较大的树时更加稳健和高效。
+
+未来的工作可以包括扩展实现，以处理其他功能，例如平衡（如AVL树或红黑树），以及实现更全面的性能测试。
+
+\section{参考文献}
+\begin{itemize}
+    \item Cormen, T. H., Leiserson, C. E., Rivest, R. L., \& Stein, C. (2009). 	\textit{Introduction to Algorithms}. MIT Press.
+    \item Sedgewick, R., \& Wayne, K. (2011). 	\textit{Algorithms}. Addison-Wesley.
+\end{itemize}
+
+\end{document}
