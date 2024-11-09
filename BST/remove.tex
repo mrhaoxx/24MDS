@@ -1,0 +1,79 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+% useful packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+
+\lstset{
+    basicstyle=\ttfamily, basewidth=0.5em
+}
+
+% some common command
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\title{AVL树的删除实现说明}
+\author{郝星星 \& ChatGPT}
+\date{\today}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\begin{document}
+
+\maketitle
+
+\section{AVL树删除实现概述}
+AVL树是一种自平衡的二叉搜索树，其特点是每个节点的左右子树高度差不超过1。AVL树的删除操作需要在节点被删除后对树进行平衡，以保证其高度始终尽量保持平衡。本次删除操作的实现为非递归版本，主要的删除步骤包括：
+
+首先，找到待删除的节点及其父节点。通过使用非递归的方式查找节点，避免了递归调用可能导致的栈溢出问题。在找到待删除节点后，根据其子节点的数量进行不同的处理：
+
+\begin{itemize}
+    \item 如果待删除节点是叶子节点，直接删除该节点即可。
+    \item 如果待删除节点只有一个子节点，则将其子节点提升来替代待删除节点的位置。
+    \item 如果待删除节点有两个子节点，则找到右子树中的最小节点，用该节点替代待删除节点，并删除最小节点的位置。
+\end{itemize}
+
+在删除节点的过程中，通过使用一个栈来记录从根节点到待删除节点路径上的所有节点。这些节点在删除操作后可能需要重新平衡。非递归查找和删除的优势在于避免了深度较大时的栈溢出风险，同时使代码逻辑更为清晰。
+
+删除节点后，需要根据路径上的节点进行重新平衡。为了实现这一点，栈中的节点会依次被弹出，并针对每个节点进行平衡调整。具体的平衡调整包括左旋、右旋或双旋操作，以确保AVL树的高度差保持在允许范围内。
+
+\section{删除操作的平衡调整}
+在AVL树中，每次删除操作后，可能会破坏树的平衡性。因此，在删除节点后需要对路径上的每个节点进行重新平衡。本实现中，通过使用一个栈记录路径上的节点，并在删除后逐个节点进行平衡调整，确保了树的高度差保持在允许范围内。
+
+平衡调整的过程包括：
+
+\begin{itemize}
+    \item \textbf{左旋}：当右子树高度过大时进行左旋操作。
+    \item \textbf{右旋}：当左子树高度过大时进行右旋操作。
+    \item \textbf{双旋}：当某节点的两个子树中高度差过大时，可能需要先左旋再右旋，或者先右旋再左旋，具体取决于失衡的方向。
+\end{itemize}
+
+通过这种方式，AVL树在每次删除操作后能够保持平衡，确保查找、插入和删除操作的时间复杂度始终保持在 $O(\log n)$ 的水平。
+
+\end{document}
+
