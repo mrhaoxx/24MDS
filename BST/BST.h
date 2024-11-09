@@ -10,6 +10,7 @@
  */
 
 #include <iostream>
+#include <stack>
 
 /// 临时性的异常类，用于表示树为空的异常
 class UnderflowException { };
@@ -190,7 +191,7 @@ public:
         return *this;
     }
 
-private:
+protected:
     /**
      * @brief 二叉树节点结构体
      */
@@ -200,6 +201,8 @@ private:
         BinaryNode *left;    ///< 左子节点指针
         BinaryNode *right;   ///< 右子节点指针
 
+        int height;
+
         /**
          * @brief 构造函数，接受常量引用
          * 
@@ -207,8 +210,8 @@ private:
          * @param lt 左子节点指针
          * @param rt 右子节点指针
          */
-        BinaryNode(const Comparable &theElement, BinaryNode *lt, BinaryNode *rt)
-            : element{ theElement }, left{ lt }, right{ rt } {}
+        BinaryNode(const Comparable &theElement, BinaryNode *lt, BinaryNode *rt, int h = 0)
+            : element{ theElement }, left{ lt }, right{ rt }, height{h} {}
 
         /**
          * @brief 构造函数，接受右值引用
@@ -292,7 +295,8 @@ private:
         /// 中序遍历
         if (t != nullptr) {
             printTree(t->left, out);  // 先打印左子树
-            out << t->element << std::endl;  // 打印当前节点
+            out << t->element << "(" << t->height << ")" << std::endl;  // 打印当前节点
+            // out << t->element << std::endl;  // 打印当前节点
             printTree(t->right, out);  // 再打印右子树
         }
     }
@@ -328,7 +332,7 @@ private:
             /// 挂在 t 指向的节点上
             /// 而在递归过程中，t 总是会指向父节点的左子节点或右子节点
             /// 所以这里实际上是将新节点挂在父节点的左子节点或右子节点上
-            t = new BinaryNode{x, nullptr, nullptr};
+            t = new BinaryNode{x, nullptr, nullptr, 0};
         } else if (x < t->element) {
             insert(x, t->left);
         } else if (x > t->element) {
@@ -374,7 +378,11 @@ private:
     }
 
     
-    BinaryNode *detachMin(BinaryNode *&t) {
+    int height(BinaryNode *t) const {
+        return t == nullptr ? -1 : t->height;
+    }
+
+    BinaryNode *detachMin(BinaryNode *&t, std::stack<BinaryNode*> &path) {
         if(t == nullptr){
             throw UnderflowException{};
         }
@@ -384,6 +392,8 @@ private:
         while(node->left != nullptr){
             parent = node;
             node = node->left;
+
+            path.push(parent);
         }
 
         if(parent != nullptr){
@@ -401,6 +411,7 @@ private:
             return;
         }
 
+        std::stack<BinaryNode*> path;
         // find node no recursion
 
         BinaryNode *node = t;
@@ -415,18 +426,21 @@ private:
             } else {
                 break;
             }
+
+            path.push(parent);
         }
 
         // printf("node: %d %p left: %p right: %p\n", node->element, node, node->left, node->right);
 
-        if(node == nullptr){
+        if(node == nullptr) {
             return;
         }
 
         if(node->left != nullptr && node->right != nullptr){
-            BinaryNode *minNode = detachMin(node->right);
+            BinaryNode *minNode = detachMin(node->right, path);
             minNode->left = node->left;
             minNode->right = node->right;
+
             if(parent == nullptr){
                 t = minNode;
             } else {
@@ -436,6 +450,7 @@ private:
                     parent->right = minNode;
                 }
             }
+
             delete node;
         } else {
             BinaryNode *child = node->left != nullptr ? node->left : node->right;
@@ -447,9 +462,92 @@ private:
                 } else {
                     parent->right = child;
                 }
+                parent->height = std::max(height(parent->left), height(parent->right)) + 1;
             }
             delete node;
         }
+
+        // std::cout << "path size: " << path.size() << std::endl;
+
+        while(!path.empty()) {
+            BinaryNode *node = path.top();
+            path.pop();
+
+            rebalance(node->left);
+            rebalance(node->right); 
+
+            node->height = std::max(height(node->left), height(node->right)) + 1;
+        }
+
+        rebalance(t);
+    }
+
+    inline void rebalance(BinaryNode *&t){
+        if(t == nullptr){
+            return;
+        }
+
+
+        int balance = height(t->left) - height(t->right);
+
+        // std::cout << "balance: val=" << t->element << "  left=" << height(t->left) << " right=" << height(t->right) << " balance=" << balance << std::endl;
+
+        if(balance >= 2){
+            if(height(t->left->left) >= height(t->left->right)){
+                // std::cout << "rotateWithLeftChild" << std::endl;
+                rotateWithLeftChild(t);
+            } else {
+                // std::cout << "doubleWithLeftChild" << std::endl;
+                doubleWithLeftChild(t);
+            }
+        } else if(balance <= -2){
+            if(height(t->right->right) >= height(t->right->left)){
+                // std::cout << "rotateWithRightChild" << std::endl;
+                rotateWithRightChild(t);
+            } else {
+                // std::cout << "doubleWithRightChild" << std::endl;
+                doubleWithRightChild(t);
+            }
+        }
+
+        t->height = std::max(height(t->left), height(t->right)) + 1;
+
+        balance = height(t->left) - height(t->right);
+
+        // std::cout << "after balance: val=" << t->element << "  left=" << height(t->left) << " right=" << height(t->right) << " balance=" << balance << std::endl;
+
+    }
+
+    void rotateWithLeftChild(BinaryNode *&k2) {
+        BinaryNode *k1 = k2->left;
+        k2->left = k1->right;
+        k1->right = k2;
+
+        k2->height = std::max(height(k2->left), height(k2->right)) + 1;
+        k1->height = std::max(height(k1->left), k2->height) + 1;
+
+        k2 = k1;
+    }
+
+    void rotateWithRightChild(BinaryNode *&k2){
+        BinaryNode *k1 = k2->right;
+        k2->right = k1->left;
+        k1->left = k2;
+
+        k2->height = std::max(height(k2->left), height(k2->right)) + 1;
+        k1->height = std::max(height(k1->right), k2->height) + 1;
+
+        k2 = k1;
+    }
+
+    void doubleWithLeftChild(BinaryNode *&k3){
+        rotateWithRightChild(k3->left);
+        rotateWithLeftChild(k3);
+    }
+
+    void doubleWithRightChild(BinaryNode *&k3){
+        rotateWithLeftChild(k3->right);
+        rotateWithRightChild(k3);
     }
 };
 

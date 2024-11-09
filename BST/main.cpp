@@ -181,8 +181,100 @@ void specialCaseTests() {
     bst.makeEmpty(); // Clean up
 }
 
+
+
+class Checker : public BinarySearchTree<int>{
+private:
+    using BinarySearchTree<int>::root;
+    using node = BinarySearchTree<int>::BinaryNode;
+
+public:
+    void createChain(int N){
+        root = new node(1, nullptr, nullptr);
+        root->height = N;
+        auto p = root;
+        for(int i = 2; i <= N; i++){
+            p->right = new node(i, nullptr, nullptr);
+            p = p->right;
+            p->height = N - i + 1;
+        }
+    }
+};
+
+void testIncreasingData(){
+    std::cout << "------------------------------" << std::endl;
+    const int N = 7;
+    Checker bst;
+    bst.createChain(N);
+
+    std::cout << "success created" << std::endl;
+    // std::cout << "Before remove:" << std::endl;
+    bst.remove(N);
+    bst.printTree();
+
+    for(int i = N; i >= 1; i--)
+        bst.remove(i);
+
+    std::cout << "After remove:" << std::endl;
+    bst.printTree();
+}
+
+
+void linearTests() {
+    BinarySearchTree<int> bst;
+    std::set<int> elements;
+
+    std::cout << GREEN << "\n--- Linear Tests ---\n" << RESET << std::endl;
+
+    testIncreasingData();
+    // 1. Insert elements in increasing order
+    std::cout << YELLOW << "Test 1: Insert elements in increasing order" << RESET << std::endl;
+    for (int i = 1; i <= 10; ++i) {
+        bst.insert(i);
+        elements.insert(i);
+    }
+    std::cout << "Tree after inserting elements 1 to 10:" << std::endl;
+    bst.printTree();
+
+    // 2. Remove elements in decreasing order
+    std::cout << YELLOW << "\nTest 2: Remove elements in decreasing order" << RESET << std::endl;
+    bst.remove(10);
+
+    bst.printTree();
+
+    for (int i = 9; i >= 1; --i) {
+        bst.remove(i);
+        elements.erase(i);
+    }
+
+    std::cout << "Tree after removing elements 10 to 1:" << std::endl;
+    bst.printTree();
+
+    // 3. Insert elements in decreasing order
+    std::cout << YELLOW << "\nTest 3: Insert elements in decreasing order" << RESET << std::endl;
+    for (int i = 10; i >= 1; --i) {
+        bst.insert(i);
+        elements.insert(i);
+    }
+    std::cout << "Tree after inserting elements 10 to 1:" << std::endl;
+    bst.printTree();
+
+    // 4. Remove elements in increasing order
+    std::cout << YELLOW << "\nTest 4: Remove elements in increasing order" << RESET << std::endl;
+    for (int i = 1; i <= 10; ++i) {
+        bst.remove(i);
+        elements.erase(i);
+    }
+    std::cout << "Tree after removing elements 1 to 10:" << std::endl;
+    bst.printTree();
+
+    bst.makeEmpty(); // Clean up
+}
+
 int main() {
     randomTests();
     specialCaseTests();
+    linearTests();
+    testIncreasingData();
     return 0;
 }
