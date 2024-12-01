@@ -1,0 +1,92 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+% useful packages.
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+
+\lstset{
+    basicstyle=\ttfamily, basewidth=0.5em
+}
+
+% some common command
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+\lhead{数据结构与算法第七次作业}
+\chead{HeapSort 性能分析报告}
+\rhead{2024 年 12 月 1 日}
+
+\title{HeapSort with STL}
+\author{mrhaoxx \& ChatGPT}
+
+\maketitle
+
+\section{整体设计思路}
+本次作业设计了一个基于堆排序的算法，并通过 \texttt{std::make\_heap} 和 \texttt{std::pop\_heap} 实现排序功能。主要功能包括：
+\begin{itemize}
+    \item 使用标准库的堆操作函数构建堆，排序元素。
+    \item 针对随机序列、有序序列、逆序序列、部分重复序列进行性能测试。
+\end{itemize}
+
+\section{测试流程设计}
+测试程序的主要步骤包括：
+\begin{enumerate}
+    \item 生成不同类型的测试数据：随机序列、有序序列、逆序序列、部分重复序列。
+    \item 分别对自定义堆排序与 \texttt{std::sort\_heap()} 进行排序操作。
+    \item 记录每种排序方法的时间，进行性能比较。
+\end{enumerate}
+
+\section{测试结果与对比}
+测试结果如下：
+\begin{table}[H]
+    \centering
+    \caption{不同排序算法的性能对比 (单位：ms)}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        数据类型 & 自定义堆排序 & STL 堆排序 \\
+        \hline
+        随机序列 & 1311 & 1261 \\
+        \hline
+        有序序列 & 448 & 457 \\
+        \hline
+        逆序序列 & 462 & 480 \\
+        \hline
+        部分重复序列 & 1151 & 1139 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{结论}
+通过对比测试结果可以看出：
+\begin{itemize}
+    \item 自定义堆排序在性能上与 STL 堆排序相当，且在部分情况下性能略优。
+\end{itemize}
+
+
+\end{document}
