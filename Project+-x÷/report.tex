@@ -1,0 +1,113 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry, CJKutf8}
+\geometry{margin=1.5cm, vmargin={0pt,1cm}}
+\setlength{\topmargin}{-1cm}
+\setlength{\paperheight}{29.7cm}
+\setlength{\textheight}{25.3cm}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{float, caption}
+\usepackage{hyperref}
+
+\lstset{
+    basicstyle=\ttfamily,
+    basewidth=0.5em
+}
+
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand{\difFrac}[2]{\frac{\dif #1}{\dif #2}}
+\newcommand{\pdfFrac}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\OFL}{\mathrm{OFL}}
+\newcommand{\UFL}{\mathrm{UFL}}
+\newcommand{\fl}{\mathrm{fl}}
+\newcommand{\op}{\odot}
+\newcommand{\Eabs}{E_{\mathrm{abs}}}
+\newcommand{\Erel}{E_{\mathrm{rel}}}
+
+\title{四则运算表达式求值程序设计与分析报告}
+\author{作者：郝星星 \& ChatGPT}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{引言}
+本报告介绍了一个四则运算表达式求值程序的设计思路和实现方法。该程序支持加减乘除以及括号的中缀表达式求值，并对非法输入进行严谨的判断和处理。用户可输入任意含有小数、科学计数法以及负数的中缀表达式，程序将输出计算结果或在检测到错误时输出“ILLEGAL”。
+
+\section{需求和挑战}
+在实现四则运算表达式求值时需要解决以下几个关键问题：
+\begin{enumerate}
+    \item \textbf{支持多类型输入元素}：  
+    表达式中可能出现整数、小数、科学计数法的数值、加减乘除运算符及多层嵌套的括号。
+    \item \textbf{错误检测与处理}：  
+    需要对各种非法情况进行识别和处理，包括：
+    \begin{itemize}
+        \item 括号不匹配
+        \item 连续运算符（如$1++2$）
+        \item 表达式起始或结束处为运算符
+        \item 除数为零
+        \item 非法字符（如$1a+2$）
+        \item 科学计数法格式不正确（如$2e+$）
+    \end{itemize}
+    对于非法表达式，程序统一输出“ILLEGAL”。
+\end{enumerate}
+
+\section{设计思路}
+为实现通用且可靠的求值程序，本报告采用了标准的三步法：
+\begin{enumerate}
+    \item \textbf{分词（Tokenization）}：  
+    将输入字符串解析为一个有序的记号序列（token list），包括数字（支持小数和科学计数法）、运算符和括号。  
+    在此步骤对数字格式进行检查，并识别可作为负号的单目减号。
+
+    \item \textbf{中缀转后缀（Shunting Yard算法）}：  
+    将中缀表达式转换为后缀（逆波兰表示法）表达式。  
+    运用优先级和栈结构处理运算符和括号，并在此过程中确保表达式结构合法，如检测括号配对和连续运算符。
+
+    \item \textbf{后缀求值}：  
+    使用栈对后缀表达式求值。当遇到运算符时，从栈中弹出对应数量的操作数进行计算，再将结果压回栈中。  
+    在此步骤检测除零错误以及最终结果栈中元素个数是否正确。
+\end{enumerate}
+
+\section{结果分析}
+\subsection{测试数据说明}
+测试数据由若干行组成，每行一个表达式和预期结果，用空格分隔。如果预期结果为“ - ”，表示该表达式应被判断为非法。
+例如：
+\begin{itemize}
+    \item $(1+2)*3$ 期望结果为 $9$，若程序输出9则表示通过测试。
+    \item $1++2$ 期望结果为“ - ”，代表非法表达式，程序应输出“ILLEGAL”。
+\end{itemize}
+
+测试数据覆盖：
+\begin{enumerate}
+    \item 基本四则运算：如$1+2*3$
+    \item 括号嵌套与优先级：如$((2+3)*5)/(7-2)$
+    \item 负数与科学计数法：如$-1+2e2$
+    \item 各类非法情形：如$1++2$、$1/0$、$3..5$、$((1+2)3)$
+\end{enumerate}
+
+\subsection{测试结果}
+在对广泛的测试数据进行验证后，程序对于合法表达式能正确输出结果，对于非法表达式则能够及时输出“ILLEGAL”。例如：
+\begin{itemize}
+    \item 输入$(1+2)*3$，程序输出$9$，期望值为$9$，测试通过。
+    \item 输入$1/0$，程序输出“ILLEGAL”，符合预期。
+    \item 输入$1++2$，程序输出“ILLEGAL”，期望为“ - ”，测试通过。
+    \item 输入$-1+2e2$，程序正确计算为$199$，符合期望值。
+\end{itemize}
+
+在对包含负数、小数、科学计数法、复杂嵌套括号以及非法字符和格式的测试用例进行验证后，程序表现出较高的鲁棒性和正确性。
+
+\section{总结与展望}
+本程序采用分词、中缀转后缀和后缀求值的经典策略，对四则运算表达式进行求值，并实现了对非法输入的严格检查。结果表明，该设计方案简单而有效，易于扩展。  
+未来可考虑,支持更多数学函数（如$\sin$, $\cos$, $\log$等,也可加入包括求积分，求极限之类的函数。
+
+\end{document}
